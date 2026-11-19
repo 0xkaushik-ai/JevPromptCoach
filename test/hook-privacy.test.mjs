@@ -664,11 +664,16 @@ function runReport(privacy) {
   );
   const child = spawn(process.execPath, ['dist/cli.js', 'report'], {
     env: { ...process.env, HOME: home, TYPESAFE_BASE_URL: `http://127.0.0.1:${port}` },
-    stdio: 'ignore',
+    stdio: ['ignore', 'ignore', 'pipe'],
+  });
+  let stderr = '';
+  child.stderr.on('data', (c) => {
+    stderr += c;
   });
   return new Promise((resolve) => {
     child.on('close', (status) => {
       rmSync(home, { recursive: true, force: true });
+      assert.equal(status, 0, `report exited ${status}: ${stderr}`);
       resolve({ status });
     });
   });
